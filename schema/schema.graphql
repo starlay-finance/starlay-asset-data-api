@@ -6,6 +6,27 @@ type AssetData {
     id: ID!
     timestamp: String!
     poolData: PoolData!
+    reservesIncentives: [ReservesIncentivesData!]!
+}
+
+type ReservesIncentivesData {
+    underlyingAsset: String!
+    lIncentiveData: IncentivesWithFeeds!
+    vdIncentiveData: IncentivesWithFeeds!
+    sdIncentiveData: IncentivesWithFeeds!
+}
+
+type IncentivesWithFeeds {
+    priceFeed: String!
+    emissionPerSecond: String!
+    incentivesLastUpdateTimestamp: Int!
+    tokenIncentivesIndex: String!
+    emissionEndTimestamp: Int!
+    tokenAddress: String!
+    rewardTokenAddress: String!
+    incentiveControllerAddress: String!
+    rewardTokenDecimals: Int!
+    precision: Int!
 }
 
 type PoolData {
