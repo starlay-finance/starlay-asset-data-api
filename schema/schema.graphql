@@ -1,0 +1,58 @@
+type Query {
+  getAssetData(date: String!): AssetData
+}
+
+type AssetData {
+    id: ID!
+    timestamp: String!
+    poolData: PoolData!
+}
+
+type PoolData {
+    baseCurrencyData: BaseCurrencyData!
+    reservesData: [ReservesData!]!
+}
+
+type BaseCurrencyData {
+    networkBaseTokenPriceInUsd: String!
+    networkBaseTokenPriceDecimals: Int!
+    marketReferenceCurrencyPriceInUsd: String!
+    marketReferenceCurrencyDecimals: Int!
+}
+
+type ReservesData {
+    priceInMarketReferenceCurrency: String!
+    symbol: String!
+    stableDebtTokenAddress: String!
+    reserveLiquidationThreshold: String!
+    availableLiquidity: String!
+    variableRateSlope2: String!
+    variableRateSlope1: String!
+    stableBorrowRate: String!
+    stableBorrowRateEnabled: Boolean!
+    stableDebtLastUpdateTimestamp: Int!
+    totalScaledVariableDebt: String!
+    underlyingAsset: String!
+    isActive: Boolean!
+    lastUpdateTimestamp: Int!
+    totalPrincipalStableDebt: String!
+    baseLTVasCollateral: String!
+    id: String!
+    variableBorrowIndex: String!
+    reserveFactor: String!
+    isFrozen: Boolean!
+    reserveLiquidationBonus: String!
+    borrowingEnabled: Boolean!
+    variableBorrowRate: String!
+    interestRateStrategyAddress: String!
+    stableRateSlope2: String!
+    stableRateSlope1: String!
+    liquidityRate: String!
+    usageAsCollateralEnabled: String!
+    decimals: Int!
+    averageStableRate: String!
+    name: String
+    lTokenAddress: String!
+    liquidityIndex: String!
+    variableDebtTokenAddress: String!
+}
