@@ -69,7 +69,7 @@ type ReservesData {
     stableRateSlope2: String!
     stableRateSlope1: String!
     liquidityRate: String!
-    usageAsCollateralEnabled: String!
+    usageAsCollateralEnabled: Boolean!
     decimals: Int!
     averageStableRate: String!
     name: String!
