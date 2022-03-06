@@ -33,6 +33,7 @@
     "@starlay-finance/contract-helpers": "^0.0.10",
     "bignumber.js": "^9.0.2",
     "constructs": "^10.0.0",
+    "dayjs": "^1.10.8",
     "esbuild": "^0.14.25",
     "ethers": "^5.5.4",
     "reflect-metadata": "^0.1.13",

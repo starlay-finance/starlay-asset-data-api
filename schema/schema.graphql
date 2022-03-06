@@ -72,7 +72,7 @@ type ReservesData {
     usageAsCollateralEnabled: String!
     decimals: Int!
     averageStableRate: String!
-    name: String
+    name: String!
     lTokenAddress: String!
     liquidityIndex: String!
     variableDebtTokenAddress: String!

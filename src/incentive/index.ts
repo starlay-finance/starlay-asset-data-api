@@ -6,7 +6,12 @@ import {
 } from '@starlay-finance/contract-helpers';
 import { ethers } from 'ethers';
 import { DynamoDB } from 'aws-sdk';
+import dayjs = require('dayjs');
 import { tableName } from '../../lib/starlay-asset-data-api-stack';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const ddbdc = new DynamoDB.DocumentClient();
 
@@ -44,13 +49,9 @@ export async function handler(event: any, context: any): Promise<void> {
     }),
   ]);
   const now = new Date();
+  const date = dayjs().utc().startOf('hour');
   const ddbParam: DDBParam = {
-    id: new Date(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      now.getUTCHours()
-    ).toJSON(),
+    id: date.toISOString(),
     timestamp: Math.floor(now.getTime() / 1000).toString(),
     poolData: poolData,
     reservesIncentives: reservesIncentives,
