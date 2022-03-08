@@ -49,7 +49,7 @@ export async function handler(event: any, context: any): Promise<void> {
     }),
   ]);
   const now = new Date();
-  const date = dayjs().utc().startOf('hour');
+  const date = dayjs().utc().startOf('date');
   const ddbParam: DDBParam = {
     id: date.toISOString(),
     timestamp: Math.floor(now.getTime() / 1000).toString(),
