@@ -8,7 +8,7 @@ import {
   MappingTemplate,
   Schema,
 } from '@aws-cdk/aws-appsync';
-import { AttributeType, Table } from '@aws-cdk/aws-dynamodb';
+import { AttributeType, ProjectionType, Table } from '@aws-cdk/aws-dynamodb';
 import {
   Stack,
   StackProps,
@@ -35,6 +35,19 @@ export class StarlayAssetDataApiStack extends Stack {
       tableName: tableName,
       removalPolicy: RemovalPolicy.DESTROY,
     });
+    table.addGlobalSecondaryIndex({
+      indexName: 'GSI-1',
+      partitionKey: {
+        name: 'type',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'number',
+        type: AttributeType.NUMBER,
+      },
+      projectionType: ProjectionType.ALL,
+    });
+
     const api = new GraphqlApi(this, 'graphqlapi', apiProps());
     const ddbDs = new DynamoDbDataSource(this, 'ddbDataSource', {
       api,
@@ -58,10 +71,57 @@ export class StarlayAssetDataApiStack extends Stack {
         )
       ),
     });
+    api.createResolver({
+      typeName: 'Query',
+      fieldName: 'getStatistics',
+      dataSource: ddbDs,
+      requestMappingTemplate: MappingTemplate.fromFile(
+        join(
+          __dirname,
+          '..',
+          'schema',
+          'templates',
+          'getStatistics.request.vtl'
+        )
+      ),
+      responseMappingTemplate: MappingTemplate.fromFile(
+        join(
+          __dirname,
+          '..',
+          'schema',
+          'templates',
+          'getStatistics.response.vtl'
+        )
+      ),
+    });
+    api.createResolver({
+      typeName: 'Query',
+      fieldName: 'healthFactors',
+      dataSource: ddbDs,
+      requestMappingTemplate: MappingTemplate.fromFile(
+        join(
+          __dirname,
+          '..',
+          'schema',
+          'templates',
+          'healthFactors.request.vtl'
+        )
+      ),
+      responseMappingTemplate: MappingTemplate.fromFile(
+        join(
+          __dirname,
+          '..',
+          'schema',
+          'templates',
+          'healthFactors.response.vtl'
+        )
+      ),
+    });
     const updatorFunction = new NodejsFunction(this, 'asset-data-updator', {
       entry: 'src/incentive/index.ts',
       handler: 'handler',
       timeout: Duration.seconds(30),
+      memorySize: 1024,
     });
     updatorFunction.addToRolePolicy(
       new PolicyStatement({
@@ -74,6 +134,29 @@ export class StarlayAssetDataApiStack extends Stack {
       schedule: Schedule.cron({
         hour: '0',
         minute: '0',
+      }),
+      targets: [
+        new LambdaFunction(updatorFunction, {
+          retryAttempts: 3,
+        }),
+      ],
+    });
+    const statsFunction = new NodejsFunction(this, 'statistics-updator', {
+      entry: 'src/userStats/index.ts',
+      handler: 'handler',
+      timeout: Duration.minutes(10),
+      memorySize: 1024,
+    });
+    statsFunction.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['dynamodb:PutItem'],
+        effect: Effect.ALLOW,
+        resources: [table.tableArn],
+      })
+    );
+    new Rule(this, 'statisticsUpdatorExecutionRule', {
+      schedule: Schedule.cron({
+        minute: '0/30',
       }),
       targets: [
         new LambdaFunction(updatorFunction, {
