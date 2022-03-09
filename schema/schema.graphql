@@ -1,6 +1,19 @@
 type Query {
   getAssetData(date: String!): AssetData
+  getStatistics(dateAndTime: String!): Statistics
+  healthFactors(PageInput: PageInput): HealthFactorsOutput!
 }
+
+input PageInput {
+    nextToken: String
+    limit: Int
+}
+
+type HealthFactorsOutput {
+    items: [HealthFactor!]!
+    nextToken: String
+}
+
 
 type AssetData {
     id: ID!
@@ -39,6 +52,22 @@ type BaseCurrencyData {
     networkBaseTokenPriceDecimals: Int!
     marketReferenceCurrencyPriceInUsd: String!
     marketReferenceCurrencyDecimals: Int!
+}
+
+type HealthFactor {
+    id: ID! ## account address
+    timestamp: String!
+    number: Float! ## health factor
+}
+
+type Statistics {
+  id: ID!
+  data: String!
+  timestamp: String!
+  uniqueDepositedUsers: Int!
+  uniqueBorrowedUsers: Int!
+  depositTxCount: Int!
+  borrowTxCount: Int!
 }
 
 type ReservesData {
