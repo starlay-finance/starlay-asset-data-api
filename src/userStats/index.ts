@@ -61,37 +61,44 @@ export async function handler(event: any, context: any): Promise<void> {
       console.log(err);
     }
   });
-
-  for (const borrowedUser of uniqueBorrowed) {
-    const data = await retry(
-      () => lendingPool.getUserAccountData(borrowedUser),
-      { retries: 3, backoff: 'EXPONENTIAL', timeout: 100 * 1000 }
-    );
-    const input: DDBHealthFactorParam = {
-      id: borrowedUser,
-      type: 'HealthFactor',
-      number: Number(ethers.utils.formatEther(data.healthFactor)),
-      timestamp: Math.floor(now.getTime() / 1000).toString(),
-    };
-    ddbdc.put(
-      {
-        Item: input,
-        TableName: tableName,
-      },
-      function (err) {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-    await delay(100);
+  const chunk = 10;
+  let promises = [];
+  for (let index = 0; index < borrowed.length; index++) {
+    promises.push(getHealthFactor(borrowed[index], now, lendingPool));
+    if ((index + 1) % chunk === 0 || index + 1 === borrowed.length) {
+      (await Promise.all(promises)).forEach((i) => {
+        ddbdc.put(
+          {
+            TableName: tableName,
+            Item: i,
+          },
+          (err) => {
+            console.log(err);
+          }
+        );
+      });
+      promises = [];
+    }
   }
 }
 
-function delay(ms: number) {
-  return new Promise((resolve) => {
-    return setTimeout(resolve, ms);
+async function getHealthFactor(
+  borrowedUser: string,
+  now: Date,
+  lendingPool: LendingPool
+) {
+  const data = await retry(() => lendingPool.getUserAccountData(borrowedUser), {
+    retries: 3,
+    backoff: 'EXPONENTIAL',
+    timeout: 100 * 1000,
   });
+  const input: DDBHealthFactorParam = {
+    id: borrowedUser,
+    type: 'HealthFactor',
+    number: Number(ethers.utils.formatEther(data.healthFactor)),
+    timestamp: Math.floor(now.getTime() / 1000).toString(),
+  };
+  return input;
 }
 
 const getAllBorrowedUsers = async (
@@ -118,7 +125,7 @@ const getUsers = async (
     to: number
   ) => Promise<ethers.providers.Log[]>
 ) => {
-  const blocksPerRequest = 500;
+  const blocksPerRequest = 1000;
   let res: string[] = [];
   let from = 508500;
   const current = await provider.getBlockNumber();
@@ -140,7 +147,6 @@ const getUsers = async (
   }
   return res;
 };
-
 const getBorrowed = async (
   provider: ethers.providers.JsonRpcProvider,
   pool: string,

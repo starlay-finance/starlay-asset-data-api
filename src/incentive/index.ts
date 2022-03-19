@@ -48,8 +48,12 @@ export async function handler(event: any, context: any): Promise<void> {
       lendingPoolAddressProvider,
     }),
   ]);
+  console.log('pooldata', poolData);
+  console.log('reservesIncentives', reservesIncentives);
+
   const now = new Date();
   const date = dayjs().utc().startOf('date');
+  console.log('date', date.toString());
   const ddbParam: DDBParam = {
     id: date.toISOString(),
     timestamp: Math.floor(now.getTime() / 1000).toString(),
@@ -60,11 +64,6 @@ export async function handler(event: any, context: any): Promise<void> {
     TableName: tableName,
     Item: ddbParam,
   };
-  ddbdc.put(param, function (err, data) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(data);
-    }
-  });
+  await ddbdc.put(param).promise();
+  console.log('fin');
 }
