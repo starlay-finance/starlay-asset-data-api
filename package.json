@@ -30,14 +30,18 @@
     "@aws-cdk/aws-lambda": "1.134.0",
     "@aws-cdk/aws-lambda-nodejs": "1.134.0",
     "@aws-cdk/core": "1.134.0",
+    "@slack/webhook": "^6.1.0",
     "@starlay-finance/contract-helpers": "^0.0.10",
+    "@typechain/ethers-v5": "^10.0.0",
     "bignumber.js": "^9.0.2",
+    "coingecko-api-v3": "^0.0.13",
     "constructs": "^10.0.0",
     "dayjs": "^1.10.8",
     "esbuild": "^0.14.25",
     "ethers": "^5.5.4",
     "reflect-metadata": "^0.1.13",
     "source-map-support": "^0.5.16",
-    "ts-retry-promise": "^0.6.1"
+    "ts-retry-promise": "^0.6.1",
+    "typechain-target-ethers-v5": "^5.0.1"
   }
 }

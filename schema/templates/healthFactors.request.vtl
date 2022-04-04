@@ -13,6 +13,6 @@
             }
         }
     },
-    "limit": $util.defaultIfNull(${ctx.args.limit}, 20),
-    "nextToken": $util.toJson($util.defaultIfNullOrBlank($ctx.args.nextToken, null))
+    "limit": $util.defaultIfNull(${ctx.arguments.PageInput.limit}, 20),
+    "nextToken": $util.toJson($util.defaultIfNullOrBlank($ctx.arguments.PageInput.nextToken, null))
 }

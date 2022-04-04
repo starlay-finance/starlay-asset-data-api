@@ -8,7 +8,12 @@ import {
   MappingTemplate,
   Schema,
 } from '@aws-cdk/aws-appsync';
-import { AttributeType, ProjectionType, Table } from '@aws-cdk/aws-dynamodb';
+import {
+  AttributeType,
+  BillingMode,
+  ProjectionType,
+  Table,
+} from '@aws-cdk/aws-dynamodb';
 import {
   Stack,
   StackProps,
@@ -34,7 +39,9 @@ export class StarlayAssetDataApiStack extends Stack {
       },
       tableName: tableName,
       removalPolicy: RemovalPolicy.DESTROY,
+      billingMode: BillingMode.PAY_PER_REQUEST,
     });
+
     table.addGlobalSecondaryIndex({
       indexName: 'GSI-1',
       partitionKey: {
@@ -120,7 +127,7 @@ export class StarlayAssetDataApiStack extends Stack {
     const updatorFunction = new NodejsFunction(this, 'asset-data-updator', {
       entry: 'src/incentive/index.ts',
       handler: 'handler',
-      timeout: Duration.seconds(30),
+      timeout: Duration.minutes(1),
       memorySize: 1024,
     });
     updatorFunction.addToRolePolicy(
@@ -144,12 +151,12 @@ export class StarlayAssetDataApiStack extends Stack {
     const statsFunction = new NodejsFunction(this, 'statistics-updator', {
       entry: 'src/userStats/index.ts',
       handler: 'handler',
-      timeout: Duration.minutes(10),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
     });
     statsFunction.addToRolePolicy(
       new PolicyStatement({
-        actions: ['dynamodb:PutItem'],
+        actions: ['dynamodb:PutItem', 'dynamodb:Batch*'],
         effect: Effect.ALLOW,
         resources: [table.tableArn],
       })
@@ -159,7 +166,7 @@ export class StarlayAssetDataApiStack extends Stack {
         minute: '0/30',
       }),
       targets: [
-        new LambdaFunction(updatorFunction, {
+        new LambdaFunction(statsFunction, {
           retryAttempts: 3,
         }),
       ],
