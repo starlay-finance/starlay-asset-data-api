@@ -149,20 +149,21 @@ const getUsers = async (
   let from = 508500;
   const current = await provider.getBlockNumber();
   while (from < current) {
-    console.log('get event logs start from:', from);
-    const _got = await callback(
-      provider,
-      pool.address,
-      from,
-      from + blocksPerRequest
+    console.log("get event logs start from:", from);
+    await retry(
+      async () => {
+        const to = from + blocksPerRequest;
+        const _got = await callback(provider, pool.address, from, to);
+        if (_got.length != 0) {
+          _got.forEach((e) => {
+            const log = pool.interface.parseLog(e);
+            res.push(log.args[1]);
+          });
+        }
+        from = to;
+      },
+      { retries: 3, backoff: "EXPONENTIAL", timeout: 100 * 1000 }
     );
-    if (_got.length != 0) {
-      _got.forEach((e) => {
-        const log = pool.interface.parseLog(e);
-        res.push(log.args[1]);
-      });
-    }
-    from += blocksPerRequest;
   }
   return res;
 };
