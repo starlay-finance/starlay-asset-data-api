@@ -34,6 +34,7 @@ interface DDBHealthFactorParam {
   type: string;
   timestamp: string;
   number: number;
+  borrowed: string;
 }
 
 export async function handler(): Promise<void> {
@@ -112,6 +113,7 @@ async function getHealthFactor(
       id: addr,
       type: "HealthFactor",
       number: +Number(ethers.utils.formatEther(data.healthFactor)).toFixed(8),
+      borrowed: ethers.utils.formatUnits(data.totalDebtETH.toString(), 8),
       timestamp: Math.floor(now.getTime() / 1000).toString(),
     };
     return input;
