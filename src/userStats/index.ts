@@ -1,21 +1,23 @@
-import { ethers } from 'ethers';
-import { DynamoDB } from 'aws-sdk';
-import dayjs = require('dayjs');
-import { tableName } from '../../lib/starlay-asset-data-api-stack';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import { LendingPoolFactory } from '../types/LendingPoolFactory';
-import { LendingPool } from '../types/LendingPool';
-import { retry } from 'ts-retry-promise';
+import { ethers } from "ethers";
+import { DynamoDB } from "aws-sdk";
+import dayjs from "dayjs";
+import { tableName } from "../../lib/starlay-asset-data-api-stack";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { LendingPoolFactory } from "../types/LendingPoolFactory";
+import { LendingPool } from "../types/LendingPool";
+import { retry } from "ts-retry-promise";
+import { Multicall } from "../types/Multicall";
+import { MulticallFactory } from "../types/MulticallFactory";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const ddbdc = new DynamoDB.DocumentClient();
 
 const provider = new ethers.providers.JsonRpcProvider(
-  'https://rpc.astar.network:8545'
+  "https://rpc.astar.network:8545"
 );
-const lendingPoolAddress = '0x90384334333f3356eFDD5b20016350843b90f182';
+const lendingPoolAddress = "0x90384334333f3356eFDD5b20016350843b90f182";
 interface DDBParam {
   id: string;
   data: string;
@@ -41,7 +43,7 @@ export async function handler(event: any, context: any): Promise<void> {
   const uniqueBorrowed = [...new Set(borrowed)];
 
   const now = new Date();
-  const date = dayjs().utc().startOf('hour');
+  const date = dayjs().utc().startOf("hour");
   const ddbParam: DDBParam = {
     id: `statistics:${date.toISOString()}`,
     data: `${date.toISOString()}`,
@@ -155,7 +157,7 @@ const getBorrowed = async (
 ) => {
   return getLogs(provider, pool, from, to, [
     ethers.utils.id(
-      'Borrow(address,address,address,uint256,uint256,uint256,uint16)'
+      "Borrow(address,address,address,uint256,uint256,uint256,uint16)"
     ),
   ]);
 };
@@ -182,6 +184,6 @@ const getDeposited = async (
   to: number
 ) => {
   return getLogs(provider, pool, from, to, [
-    ethers.utils.id('Deposit(address,address,address,uint256,uint16)'),
+    ethers.utils.id("Deposit(address,address,address,uint256,uint16)"),
   ]);
 };
