@@ -18,6 +18,7 @@ const provider = new ethers.providers.JsonRpcProvider(
   "https://rpc.astar.network:8545"
 );
 const lendingPoolAddress = "0x90384334333f3356eFDD5b20016350843b90f182";
+const multiCallAddress = "0x7D6046156df81EF335E7e765d3bc714960B73207";
 interface DDBParam {
   id: string;
   data: string;
@@ -35,7 +36,8 @@ interface DDBHealthFactorParam {
   number: number;
 }
 
-export async function handler(event: any, context: any): Promise<void> {
+export async function handler(): Promise<void> {
+  const multiCall = MulticallFactory.connect(multiCallAddress, provider);
   const lendingPool = LendingPoolFactory.connect(lendingPoolAddress, provider);
   const deposited = await getALlDepositedUsers(provider, lendingPool);
   const borrowed = await getAllBorrowedUsers(provider, lendingPool);
@@ -63,44 +65,57 @@ export async function handler(event: any, context: any): Promise<void> {
       console.log(err);
     }
   });
-  const chunk = 10;
-  let promises = [];
-  for (let index = 0; index < borrowed.length; index++) {
-    promises.push(getHealthFactor(borrowed[index], now, lendingPool));
-    if ((index + 1) % chunk === 0 || index + 1 === borrowed.length) {
-      (await Promise.all(promises)).forEach((i) => {
-        ddbdc.put(
-          {
-            TableName: tableName,
-            Item: i,
-          },
-          (err) => {
-            console.log(err);
-          }
-        );
-      });
-      promises = [];
-    }
+
+  const chunk = 20;
+  for (let i = 0; i < uniqueBorrowed.length; i += chunk) {
+    const results = await getHealthFactor(
+      uniqueBorrowed.slice(i, i + chunk),
+      now,
+      lendingPool,
+      multiCall
+    );
+    await ddbdc
+      .batchWrite({
+        RequestItems: {
+          [tableName]: results.map((Item) => ({ PutRequest: { Item } })),
+        },
+      })
+      .promise()
+      .catch((err) => console.log(err));
   }
 }
 
 async function getHealthFactor(
-  borrowedUser: string,
+  borrowedUsers: string[],
   now: Date,
-  lendingPool: LendingPool
+  lendingPool: LendingPool,
+  multiCall: Multicall
 ) {
-  const data = await retry(() => lendingPool.getUserAccountData(borrowedUser), {
-    retries: 3,
-    backoff: 'EXPONENTIAL',
-    timeout: 100 * 1000,
+  const calls = borrowedUsers.map((addr) => ({
+    target: lendingPool.address,
+    callData: lendingPool.interface.encodeFunctionData("getUserAccountData", [
+      addr,
+    ]),
+  }));
+
+  const { returnData } = await retry(
+    () => multiCall.callStatic.aggregate(calls),
+    { retries: 3, backoff: "EXPONENTIAL", timeout: 100 * 1000 }
+  );
+
+  return borrowedUsers.map((addr, index) => {
+    const data = lendingPool.interface.decodeFunctionResult(
+      "getUserAccountData",
+      returnData[index]
+    );
+    const input: DDBHealthFactorParam = {
+      id: addr,
+      type: "HealthFactor",
+      number: +Number(ethers.utils.formatEther(data.healthFactor)).toFixed(8),
+      timestamp: Math.floor(now.getTime() / 1000).toString(),
+    };
+    return input;
   });
-  const input: DDBHealthFactorParam = {
-    id: borrowedUser,
-    type: 'HealthFactor',
-    number: Number(ethers.utils.formatEther(data.healthFactor)),
-    timestamp: Math.floor(now.getTime() / 1000).toString(),
-  };
-  return input;
 }
 
 const getAllBorrowedUsers = async (
