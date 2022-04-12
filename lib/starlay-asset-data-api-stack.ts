@@ -179,10 +179,10 @@ export class StarlayAssetDataApiStack extends Stack {
     })
 
     addLambdaErrorAlarm(this, 'statistics-updator', {
-      metric: statsFunction.metricErrors(),
-      evaluationPeriods: 60,
-      datapointsToAlarm: 1,
-      threshold: 1,
+      metric: statsFunction.metricErrors({ period: Duration.minutes(30) }),
+      evaluationPeriods: 3,
+      datapointsToAlarm: 2,
+      threshold: 2,
     })
   }
 }
