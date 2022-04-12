@@ -15,8 +15,24 @@ interface DDBStatsParam {
   borrowTxCount: number
 }
 
-const START_BLOCK = 508500
+interface DDBStatsLogParam {
+  id: `statistics-log`
+  block: number
+  uniqueDepositedUsers: string[]
+  uniqueBorrowedUsers: string[]
+  depositTxCount: number
+  borrowTxCount: number
+}
+const START_BLOCK = 508499
 const BLOCKS_PER_REQUEST = 1000
+
+const EMPTY_LOG: Omit<DDBStatsLogParam, 'id'> = {
+  block: START_BLOCK,
+  uniqueBorrowedUsers: [],
+  uniqueDepositedUsers: [],
+  depositTxCount: 0,
+  borrowTxCount: 0,
+}
 
 export const recordStats = async (
   ddbdc: DynamoDB.DocumentClient,
@@ -24,16 +40,19 @@ export const recordStats = async (
   currentBlock: number,
   timestamp: number,
 ) => {
-  const log = await gerPreviousStatsLog(ddbdc)
-  const startBlock = log ? log.block + 1 : START_BLOCK
+  const log = (await gerPreviousStatsLog(ddbdc)) || EMPTY_LOG
   const { depositors, borrowers } = await getUsers(
     lendingPool,
     currentBlock,
-    startBlock,
+    log.block + 1,
   )
 
-  const uniqueDepositors = Array.from(new Set(depositors))
-  const uniqueBorrowers = Array.from(new Set(borrowers))
+  const uniqueDepositors = Array.from(
+    new Set(depositors.concat(log.uniqueDepositedUsers)),
+  )
+  const uniqueBorrowers = Array.from(
+    new Set(borrowers.concat(log.uniqueBorrowedUsers)),
+  )
 
   const date = dayjs.unix(timestamp).utc().startOf('hour')
   const ddbParam: DDBStatsParam = {
@@ -42,8 +61,8 @@ export const recordStats = async (
     timestamp: `${timestamp}`,
     uniqueDepositedUsers: uniqueDepositors.length,
     uniqueBorrowedUsers: uniqueBorrowers.length,
-    depositTxCount: depositors.length,
-    borrowTxCount: borrowers.length,
+    depositTxCount: depositors.length + log.depositTxCount,
+    borrowTxCount: borrowers.length + log.borrowTxCount,
   }
 
   const param: DynamoDB.DocumentClient.PutItemInput = {
@@ -55,9 +74,37 @@ export const recordStats = async (
     .promise()
     .catch((e) => console.error(e))
 
+  const ddbStatsLogParam: DDBStatsLogParam = {
+    id: `statistics-log`,
+    block: currentBlock,
+    uniqueDepositedUsers: uniqueDepositors,
+    uniqueBorrowedUsers: uniqueBorrowers,
+    depositTxCount: ddbParam.depositTxCount,
+    borrowTxCount: ddbParam.borrowTxCount,
+  }
+
+  const logParam: DynamoDB.DocumentClient.PutItemInput = {
+    TableName: tableName,
+    Item: ddbStatsLogParam,
+  }
+  await ddbdc
+    .put(logParam)
+    .promise()
+    .catch((e) => console.error(e))
+
   return {
     uniqueBorrowers,
   }
+}
+
+const gerPreviousStatsLog = async (ddbdc: DynamoDB.DocumentClient) => {
+  const res = await ddbdc
+    .get({
+      TableName: tableName,
+      Key: { id: 'statistics-log' },
+    })
+    .promise()
+  return res.Item as DDBStatsLogParam | undefined
 }
 
 const getUsers = async (
