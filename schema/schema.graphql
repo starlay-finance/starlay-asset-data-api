@@ -58,6 +58,7 @@ type HealthFactor {
     id: ID! ## account address
     timestamp: String!
     number: Float! ## health factor
+    borrowed: String!
 }
 
 type Statistics {
