@@ -26,11 +26,12 @@ import {
   StackProps,
 } from '@aws-cdk/core'
 import { join } from 'path'
+import { addLambdaErrorAlarm } from './lamabda-alarms'
 export const tableName = 'starlay-asset-data-table'
 
 export class StarlayAssetDataApiStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
-    super(scope, id, props);
+  constructor(scope: Construct, id: string, props: StackProps) {
+    super(scope, id, props)
     const table = new Table(this, tableName, {
       partitionKey: {
         name: 'id',
@@ -175,6 +176,13 @@ export class StarlayAssetDataApiStack extends Stack {
           retryAttempts: 3,
         }),
       ],
+    })
+
+    addLambdaErrorAlarm(this, 'statistics-updator', {
+      metric: statsFunction.metricErrors(),
+      evaluationPeriods: 60,
+      datapointsToAlarm: 1,
+      threshold: 1,
     })
   }
 }

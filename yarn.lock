@@ -135,6 +135,19 @@
     "@aws-cdk/core" "1.134.0"
     constructs "^3.3.69"
 
+"@aws-cdk/aws-chatbot@1.134.0":
+  version "1.134.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-chatbot/-/aws-chatbot-1.134.0.tgz#284252544f4d7087f1260efea9a996c5fa540954"
+  integrity sha512-q5ASARAw6mnl4RfT1lTVvLPdnMaP8tejfQIrl11+eGVvZAeM+kLJwdjh2162CjhcrOxBAOmiCT4ySsdsMMQEag==
+  dependencies:
+    "@aws-cdk/aws-cloudwatch" "1.134.0"
+    "@aws-cdk/aws-codestarnotifications" "1.134.0"
+    "@aws-cdk/aws-iam" "1.134.0"
+    "@aws-cdk/aws-logs" "1.134.0"
+    "@aws-cdk/aws-sns" "1.134.0"
+    "@aws-cdk/core" "1.134.0"
+    constructs "^3.3.69"
+
 "@aws-cdk/aws-cloudformation@1.134.0":
   version "1.134.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudformation/-/aws-cloudformation-1.134.0.tgz#6835b09e03f86f834b7709a445ed05e7aae5d3f6"
@@ -163,6 +176,19 @@
     "@aws-cdk/aws-ssm" "1.134.0"
     "@aws-cdk/core" "1.134.0"
     "@aws-cdk/cx-api" "1.134.0"
+    constructs "^3.3.69"
+
+"@aws-cdk/aws-cloudwatch-actions@1.134.0":
+  version "1.134.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudwatch-actions/-/aws-cloudwatch-actions-1.134.0.tgz#bae1126bdc83c632656fdb0ddaba4b80234c8273"
+  integrity sha512-zBs95329UyBEUYQlHgGtZIghNQldqWnh5+AJzbjbYtZ1wqnC6/7XVyYI0NWUCzjapbx+/UCUSnvkpXVC7iqedQ==
+  dependencies:
+    "@aws-cdk/aws-applicationautoscaling" "1.134.0"
+    "@aws-cdk/aws-autoscaling" "1.134.0"
+    "@aws-cdk/aws-cloudwatch" "1.134.0"
+    "@aws-cdk/aws-iam" "1.134.0"
+    "@aws-cdk/aws-sns" "1.134.0"
+    "@aws-cdk/core" "1.134.0"
     constructs "^3.3.69"
 
 "@aws-cdk/aws-cloudwatch@1.134.0":
