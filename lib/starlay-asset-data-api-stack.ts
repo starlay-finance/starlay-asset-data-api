@@ -156,7 +156,7 @@ export class StarlayAssetDataApiStack extends Stack {
     });
     statsFunction.addToRolePolicy(
       new PolicyStatement({
-        actions: ['dynamodb:PutItem', 'dynamodb:Batch*'],
+        actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:Batch*'],
         effect: Effect.ALLOW,
         resources: [table.tableArn],
       })
