@@ -1,4 +1,3 @@
-import { NodejsFunction } from '@aws-cdk/aws-lambda-nodejs';
 import {
   AuthorizationType,
   DynamoDbDataSource,
@@ -7,27 +6,27 @@ import {
   GraphqlApiProps,
   MappingTemplate,
   Schema,
-} from '@aws-cdk/aws-appsync';
+} from '@aws-cdk/aws-appsync'
 import {
   AttributeType,
   BillingMode,
   ProjectionType,
   Table,
-} from '@aws-cdk/aws-dynamodb';
+} from '@aws-cdk/aws-dynamodb'
+import { Rule, Schedule } from '@aws-cdk/aws-events'
+import { LambdaFunction } from '@aws-cdk/aws-events-targets'
+import { Effect, PolicyStatement } from '@aws-cdk/aws-iam'
+import { NodejsFunction } from '@aws-cdk/aws-lambda-nodejs'
 import {
+  Construct,
+  Duration,
+  Expiration,
+  RemovalPolicy,
   Stack,
   StackProps,
-  Construct,
-  Expiration,
-  Duration,
-  RemovalPolicy,
-} from '@aws-cdk/core';
-import { join } from 'path';
-import { Rule } from '@aws-cdk/aws-events';
-import { Schedule } from '@aws-cdk/aws-events';
-import { LambdaFunction } from '@aws-cdk/aws-events-targets';
-import { PolicyStatement, Effect } from '@aws-cdk/aws-iam';
-export const tableName = 'starlay-asset-data-table';
+} from '@aws-cdk/core'
+import { join } from 'path'
+export const tableName = 'starlay-asset-data-table'
 
 export class StarlayAssetDataApiStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -40,7 +39,7 @@ export class StarlayAssetDataApiStack extends Stack {
       tableName: tableName,
       removalPolicy: RemovalPolicy.DESTROY,
       billingMode: BillingMode.PAY_PER_REQUEST,
-    });
+    })
 
     table.addGlobalSecondaryIndex({
       indexName: 'GSI-1',
@@ -53,20 +52,26 @@ export class StarlayAssetDataApiStack extends Stack {
         type: AttributeType.NUMBER,
       },
       projectionType: ProjectionType.ALL,
-    });
+    })
 
-    const api = new GraphqlApi(this, 'graphqlapi', apiProps());
+    const api = new GraphqlApi(this, 'graphqlapi', apiProps())
     const ddbDs = new DynamoDbDataSource(this, 'ddbDataSource', {
       api,
       table,
       readOnlyAccess: true,
-    });
+    })
     api.createResolver({
       typeName: 'Query',
       fieldName: 'getAssetData',
       dataSource: ddbDs,
       requestMappingTemplate: MappingTemplate.fromFile(
-        join(__dirname, '..', 'schema', 'templates', 'getAssetData.request.vtl')
+        join(
+          __dirname,
+          '..',
+          'schema',
+          'templates',
+          'getAssetData.request.vtl',
+        ),
       ),
       responseMappingTemplate: MappingTemplate.fromFile(
         join(
@@ -74,10 +79,10 @@ export class StarlayAssetDataApiStack extends Stack {
           '..',
           'schema',
           'templates',
-          'getAssetData.response.vtl'
-        )
+          'getAssetData.response.vtl',
+        ),
       ),
-    });
+    })
     api.createResolver({
       typeName: 'Query',
       fieldName: 'getStatistics',
@@ -88,8 +93,8 @@ export class StarlayAssetDataApiStack extends Stack {
           '..',
           'schema',
           'templates',
-          'getStatistics.request.vtl'
-        )
+          'getStatistics.request.vtl',
+        ),
       ),
       responseMappingTemplate: MappingTemplate.fromFile(
         join(
@@ -97,10 +102,10 @@ export class StarlayAssetDataApiStack extends Stack {
           '..',
           'schema',
           'templates',
-          'getStatistics.response.vtl'
-        )
+          'getStatistics.response.vtl',
+        ),
       ),
-    });
+    })
     api.createResolver({
       typeName: 'Query',
       fieldName: 'healthFactors',
@@ -111,8 +116,8 @@ export class StarlayAssetDataApiStack extends Stack {
           '..',
           'schema',
           'templates',
-          'healthFactors.request.vtl'
-        )
+          'healthFactors.request.vtl',
+        ),
       ),
       responseMappingTemplate: MappingTemplate.fromFile(
         join(
@@ -120,23 +125,23 @@ export class StarlayAssetDataApiStack extends Stack {
           '..',
           'schema',
           'templates',
-          'healthFactors.response.vtl'
-        )
+          'healthFactors.response.vtl',
+        ),
       ),
-    });
+    })
     const updatorFunction = new NodejsFunction(this, 'asset-data-updator', {
       entry: 'src/incentive/index.ts',
       handler: 'handler',
       timeout: Duration.minutes(1),
       memorySize: 1024,
-    });
+    })
     updatorFunction.addToRolePolicy(
       new PolicyStatement({
         actions: ['dynamodb:PutItem'],
         effect: Effect.ALLOW,
         resources: [table.tableArn],
-      })
-    );
+      }),
+    )
     new Rule(this, 'updatorExecutionRule', {
       schedule: Schedule.cron({
         hour: '0',
@@ -147,20 +152,20 @@ export class StarlayAssetDataApiStack extends Stack {
           retryAttempts: 3,
         }),
       ],
-    });
+    })
     const statsFunction = new NodejsFunction(this, 'statistics-updator', {
       entry: 'src/userStats/index.ts',
       handler: 'handler',
       timeout: Duration.minutes(15),
       memorySize: 1024,
-    });
+    })
     statsFunction.addToRolePolicy(
       new PolicyStatement({
         actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:Batch*'],
         effect: Effect.ALLOW,
         resources: [table.tableArn],
-      })
-    );
+      }),
+    )
     new Rule(this, 'statisticsUpdatorExecutionRule', {
       schedule: Schedule.cron({
         minute: '0/30',
@@ -170,7 +175,7 @@ export class StarlayAssetDataApiStack extends Stack {
           retryAttempts: 3,
         }),
       ],
-    });
+    })
   }
 }
 
@@ -192,5 +197,5 @@ const apiProps = (): GraphqlApiProps => {
         },
       },
     },
-  };
-};
+  }
+}
