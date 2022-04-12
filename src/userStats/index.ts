@@ -40,7 +40,7 @@ interface DDBHealthFactorParam {
 export async function handler(): Promise<void> {
   const multiCall = MulticallFactory.connect(multiCallAddress, provider);
   const lendingPool = LendingPoolFactory.connect(lendingPoolAddress, provider);
-  const deposited = await getALlDepositedUsers(provider, lendingPool);
+  const deposited = await getAllDepositedUsers(provider, lendingPool);
   const borrowed = await getAllBorrowedUsers(provider, lendingPool);
   const uniqueDeposited = [...new Set(deposited)];
   const uniqueBorrowed = [...new Set(borrowed)];
@@ -127,7 +127,7 @@ const getAllBorrowedUsers = async (
   return getUsers(provider, pool, getBorrowed);
 };
 
-const getALlDepositedUsers = async (
+const getAllDepositedUsers = async (
   provider: ethers.providers.JsonRpcProvider,
   pool: LendingPool
 ) => {
