@@ -14,7 +14,7 @@ dayjs.extend(timezone)
 const ddbdc = new DynamoDB.DocumentClient()
 
 const provider = new ethers.providers.JsonRpcProvider(
-  'https://rpc.astar.network:8545',
+  'https://evm.astar.network',
 )
 const lendingPoolAddress = '0x90384334333f3356eFDD5b20016350843b90f182'
 const multiCallAddress = '0x7D6046156df81EF335E7e765d3bc714960B73207'
