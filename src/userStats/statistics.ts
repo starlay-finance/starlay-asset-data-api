@@ -24,7 +24,7 @@ interface DDBStatsLogParam {
   borrowTxCount: number
 }
 const START_BLOCK = 508499
-const BLOCKS_PER_REQUEST = 1000
+const BLOCKS_PER_REQUEST = 100
 
 const EMPTY_LOG: Omit<DDBStatsLogParam, 'id'> = {
   block: START_BLOCK,
