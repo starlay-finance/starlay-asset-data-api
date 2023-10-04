@@ -34,7 +34,7 @@ const EMPTY_LOG: Omit<DDBStatsLogParam, 'id'> = {
   borrowTxCount: 0,
 }
 
-export const recordStats = async (
+export const recordStatsEVM = async (
   ddbdc: DynamoDB.DocumentClient,
   lendingPool: LendingPool,
   currentBlock: number,

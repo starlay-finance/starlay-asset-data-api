@@ -15,7 +15,7 @@ interface DDBHealthFactorParam {
 
 const CHUNK_SIZE = 20
 
-export const recordHealthFactor = async (
+export const recordHealthFactorEVM = async (
   ddbdc: DynamoDB.DocumentClient,
   uniqueBorrowers: string[],
   lendingPool: LendingPool,
