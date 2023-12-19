@@ -9,6 +9,7 @@ import { LendingPoolFactory } from '../types/LendingPoolFactory'
 import { MulticallFactory } from '../types/MulticallFactory'
 import { recordHealthFactorEVM } from './helathfactor_evm'
 import { recordStatsEVM } from './statistics_evm'
+import { recordStatsWASM } from './statistics_wasm'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -48,15 +49,28 @@ const handlerWASM = async () => {
     throwOnConnect: true,
   })
   const keyring = new Keyring({ type: 'sr25519' })
-  const alice = keyring.addFromUri('//Alice')
+  const signer = keyring.addFromUri('//Alice')
   const controllerAddress = 'akVUD7MNuxpwqwkBsJjmG7aCmEx63Jr643rLVZp33z1nhRF'
-  const controller = new Controller(controllerAddress, alice, api)
+  const controller = new Controller(controllerAddress, signer, api)
   const timestamp = dayjs().unix()
-  const currentBlock = (await api.rpc.chain.getBlock()).block.header.number.toNumber()
-  console.log(currentBlock)
+  const currentBlock = (
+    await api.rpc.chain.getBlock()
+  ).block.header.number.toNumber()
+
+  const { uniqueBorrowers } = await recordStatsWASM(
+    ddbdc,
+    controller,
+    signer,
+    api,
+    currentBlock,
+    timestamp,
+  )
+  console.log('uniqueBorrowers', uniqueBorrowers)
+
+  await api.disconnect()
 }
 
 export const handler = async () => {
-  // handlerEVM()
-  handlerWASM()
+  await handlerEVM()
+  // await handlerWASM()
 }
